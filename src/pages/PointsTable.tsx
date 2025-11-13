@@ -50,7 +50,7 @@ export default function PointsTable() {
               <TableBody>
                 {stats.map((teamStats, index) => {
                   const team = TEAMS.find((t) => t.id === teamStats.teamId);
-                  const isTopThree = index < 3;
+                  const isTopThree = index < 4;
 
                   return (
                     <TableRow
