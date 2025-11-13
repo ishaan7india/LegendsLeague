@@ -10,8 +10,13 @@ export default function Home() {
   const { matches } = useTournament();
   const stats = calculateTeamStats(matches);
   const topTeam = stats[0];
-  const completedMatches = matches.filter((m) => m.winner || m.isNoResult);
-  const upcomingMatches = matches.filter((m) => !m.winner && !m.isNoResult);
+  
+  const leagueMatches = matches.filter((m) => !m.isPlayoff);
+  const playoffMatches = matches.filter((m) => m.isPlayoff);
+  
+  const completedLeague = leagueMatches.filter((m) => m.winner || m.isNoResult);
+  const completedPlayoffs = playoffMatches.filter((m) => m.winner || m.isNoResult);
+  const upcomingLeague = leagueMatches.filter((m) => !m.winner && !m.isNoResult);
 
   const topTeamName = TEAMS.find((t) => t.id === topTeam.teamId)?.name;
 
@@ -63,9 +68,9 @@ export default function Home() {
             <Target className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{completedMatches.length}</div>
+            <div className="text-2xl font-bold">{completedLeague.length}</div>
             <p className="text-xs text-muted-foreground">
-              {upcomingMatches.length} matches remaining
+              {upcomingLeague.length} league remaining
             </p>
           </CardContent>
         </Card>
@@ -102,7 +107,7 @@ export default function Home() {
       </div>
 
       {/* Tournament Info */}
-      <div className="grid md:grid-cols-2 gap-6">
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
         <Card>
           <CardHeader>
             <CardTitle>Tournament Format</CardTitle>
@@ -140,6 +145,43 @@ export default function Home() {
                   </span>
                 </div>
               ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Playoff Structure (IPL System)</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <h4 className="font-semibold mb-2 text-warning">Qualifier 1</h4>
+              <p className="text-sm text-muted-foreground">
+                1st place vs 2nd place. Winner advances to Final.
+              </p>
+            </div>
+            <div>
+              <h4 className="font-semibold mb-2 text-accent">Eliminator</h4>
+              <p className="text-sm text-muted-foreground">
+                3rd place vs 4th place. Loser is eliminated.
+              </p>
+            </div>
+            <div>
+              <h4 className="font-semibold mb-2 text-warning">Qualifier 2</h4>
+              <p className="text-sm text-muted-foreground">
+                Loser of Q1 vs Winner of Eliminator. Winner advances to Final.
+              </p>
+            </div>
+            <div>
+              <h4 className="font-semibold mb-2 text-primary">Final</h4>
+              <p className="text-sm text-muted-foreground">
+                Winner of Q1 vs Winner of Q2. Champion crowned!
+              </p>
+            </div>
+            <div className="pt-2 border-t">
+              <p className="text-xs text-muted-foreground">
+                {completedPlayoffs.length} of {playoffMatches.length} playoff matches completed
+              </p>
             </div>
           </CardContent>
         </Card>
