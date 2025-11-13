@@ -25,6 +25,8 @@ export interface Match {
   isWalkover: boolean;
   isNoResult: boolean;
   date?: string;
+  isPlayoff?: boolean;
+  playoffType?: "qualifier1" | "eliminator" | "qualifier2" | "final";
 }
 
 export interface TeamStats {
@@ -54,26 +56,111 @@ export const TEAMS: Team[] = [
   { id: "SRH", name: "Sunrisers Hyderabad", shortName: "SRH" },
 ];
 
-// Generate all matches for single round-robin (45 matches)
+// Generate all matches for single round-robin with better spacing (45 matches)
 export function generateRoundRobinSchedule(): Match[] {
   const matches: Match[] = [];
   let matchNumber = 1;
-
+  
+  // Create all possible matchups
+  const allMatchups: Array<[number, number]> = [];
   for (let i = 0; i < TEAMS.length; i++) {
     for (let j = i + 1; j < TEAMS.length; j++) {
-      matches.push({
-        id: `match-${matchNumber}`,
-        matchNumber,
-        teamA: TEAMS[i].id,
-        teamB: TEAMS[j].id,
-        isWalkover: false,
-        isNoResult: false,
-      });
-      matchNumber++;
+      allMatchups.push([i, j]);
     }
+  }
+  
+  // Schedule matches with spacing using round-robin algorithm
+  // This ensures teams don't play consecutive matches
+  const scheduled: Array<[number, number]> = [];
+  const teamLastMatch: Map<number, number> = new Map();
+  
+  // Simple scheduling: try to space out team appearances
+  while (allMatchups.length > 0) {
+    let bestMatchIndex = -1;
+    let bestScore = -1;
+    
+    for (let i = 0; i < allMatchups.length; i++) {
+      const [team1, team2] = allMatchups[i];
+      const team1Last = teamLastMatch.get(team1) || 0;
+      const team2Last = teamLastMatch.get(team2) || 0;
+      const minGap = Math.min(matchNumber - team1Last, matchNumber - team2Last);
+      
+      if (minGap > bestScore) {
+        bestScore = minGap;
+        bestMatchIndex = i;
+      }
+    }
+    
+    const [team1, team2] = allMatchups[bestMatchIndex];
+    scheduled.push([team1, team2]);
+    teamLastMatch.set(team1, matchNumber);
+    teamLastMatch.set(team2, matchNumber);
+    allMatchups.splice(bestMatchIndex, 1);
+    matchNumber++;
+  }
+  
+  // Convert to match objects
+  matchNumber = 1;
+  for (const [i, j] of scheduled) {
+    matches.push({
+      id: `match-${matchNumber}`,
+      matchNumber,
+      teamA: TEAMS[i].id,
+      teamB: TEAMS[j].id,
+      isWalkover: false,
+      isNoResult: false,
+      isPlayoff: false,
+    });
+    matchNumber++;
   }
 
   return matches;
+}
+
+// Generate playoff matches (IPL system)
+export function generatePlayoffMatches(): Match[] {
+  return [
+    {
+      id: "playoff-qualifier1",
+      matchNumber: 46,
+      teamA: "TBD", // 1st place
+      teamB: "TBD", // 2nd place
+      isWalkover: false,
+      isNoResult: false,
+      isPlayoff: true,
+      playoffType: "qualifier1",
+    },
+    {
+      id: "playoff-eliminator",
+      matchNumber: 47,
+      teamA: "TBD", // 3rd place
+      teamB: "TBD", // 4th place
+      isWalkover: false,
+      isNoResult: false,
+      isPlayoff: true,
+      playoffType: "eliminator",
+    },
+    {
+      id: "playoff-qualifier2",
+      matchNumber: 48,
+      teamA: "TBD", // Loser of Q1
+      teamB: "TBD", // Winner of Eliminator
+      isWalkover: false,
+      isNoResult: false,
+      isPlayoff: true,
+      playoffType: "qualifier2",
+    },
+    {
+      id: "playoff-final",
+      matchNumber: 49,
+      teamA: "TBD", // Winner of Q1
+      teamB: "TBD", // Winner of Q2
+      isWalkover: false,
+      isNoResult: false,
+      isPlayoff: true,
+      playoffType: "final",
+    },
+  ];
 }
 
 // Convert cricket overs (X.Y where Y is balls 0-5) to decimal overs

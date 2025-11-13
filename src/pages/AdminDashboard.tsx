@@ -31,8 +31,14 @@ export default function AdminDashboard() {
     return <Navigate to="/admin/login" replace />;
   }
 
-  const pendingMatches = matches.filter((m) => !m.winner && !m.isNoResult);
-  const completedMatches = matches.filter((m) => m.winner || m.isNoResult);
+  const leagueMatches = matches.filter((m) => !m.isPlayoff);
+  const playoffMatches = matches.filter((m) => m.isPlayoff);
+  
+  const pendingLeagueMatches = leagueMatches.filter((m) => !m.winner && !m.isNoResult);
+  const completedLeagueMatches = leagueMatches.filter((m) => m.winner || m.isNoResult);
+  
+  const pendingPlayoffMatches = playoffMatches.filter((m) => !m.winner && !m.isNoResult);
+  const completedPlayoffMatches = playoffMatches.filter((m) => m.winner || m.isNoResult);
 
   const handleMatchSelect = (matchId: string) => {
     const match = matches.find((m) => m.id === matchId);
@@ -188,39 +194,53 @@ export default function AdminDashboard() {
       </div>
 
       {/* Stats */}
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium">Total Matches</CardTitle>
+            <CardTitle className="text-sm font-medium">League Matches</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{matches.length}</div>
+            <div className="text-2xl font-bold">{leagueMatches.length}</div>
+            <p className="text-xs text-muted-foreground">
+              {completedLeagueMatches.length} completed
+            </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium">Completed</CardTitle>
+            <CardTitle className="text-sm font-medium">Playoff Matches</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{completedMatches.length}</div>
+            <div className="text-2xl font-bold">{playoffMatches.length}</div>
+            <p className="text-xs text-muted-foreground">
+              {completedPlayoffMatches.length} completed
+            </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium">Pending</CardTitle>
+            <CardTitle className="text-sm font-medium">Pending League</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{pendingMatches.length}</div>
+            <div className="text-2xl font-bold">{pendingLeagueMatches.length}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium">Pending Playoffs</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{pendingPlayoffMatches.length}</div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Match Editor */}
+      {/* League Match Editor */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Plus className="h-5 w-5" />
-            Enter Match Result
+            Enter League Match Result
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -232,7 +252,7 @@ export default function AdminDashboard() {
                 <SelectValue placeholder="Choose a match" />
               </SelectTrigger>
               <SelectContent>
-                {matches.map((match) => {
+                {leagueMatches.map((match) => {
                   const teamA = TEAMS.find((t) => t.id === match.teamA);
                   const teamB = TEAMS.find((t) => t.id === match.teamB);
                   const status = match.winner || match.isNoResult ? " ✓" : "";
@@ -367,6 +387,244 @@ export default function AdminDashboard() {
                   <div className="space-y-4">
                     <h3 className="font-semibold">
                       {TEAMS.find((t) => t.id === editingMatch.teamB)?.name}
+                    </h3>
+                    <div className="space-y-2">
+                      <Label>Runs</Label>
+                      <Input
+                        type="number"
+                        value={teamBScore.runs}
+                        onChange={(e) =>
+                          setTeamBScore({ ...teamBScore, runs: e.target.value })
+                        }
+                        placeholder="0"
+                      />
+                      {errors.teamBRuns && (
+                        <p className="text-sm text-destructive">
+                          {errors.teamBRuns}
+                        </p>
+                      )}
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Wickets</Label>
+                      <Input
+                        type="number"
+                        max="10"
+                        value={teamBScore.wickets}
+                        onChange={(e) =>
+                          setTeamBScore({
+                            ...teamBScore,
+                            wickets: e.target.value,
+                          })
+                        }
+                        placeholder="0"
+                      />
+                      {errors.teamBWickets && (
+                        <p className="text-sm text-destructive">
+                          {errors.teamBWickets}
+                        </p>
+                      )}
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Overs (e.g., 17.4)</Label>
+                      <Input
+                        type="number"
+                        step="0.1"
+                        value={teamBScore.overs}
+                        onChange={(e) =>
+                          setTeamBScore({ ...teamBScore, overs: e.target.value })
+                        }
+                        placeholder="0.0"
+                      />
+                      {errors.teamBOvers && (
+                        <p className="text-sm text-destructive">
+                          {errors.teamBOvers}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex gap-3">
+                <Button onClick={handleSave} className="flex-1">
+                  Save Result
+                </Button>
+                <Button variant="outline" onClick={resetForm}>
+                  Cancel
+                </Button>
+              </div>
+            </>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Playoff Match Editor */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Settings className="h-5 w-5" />
+            Enter Playoff Match Result
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Playoff Match Selection */}
+          <div className="space-y-2">
+            <Label>Select Playoff Match</Label>
+            <Select value={selectedMatchId} onValueChange={handleMatchSelect}>
+              <SelectTrigger>
+                <SelectValue placeholder="Choose a playoff match" />
+              </SelectTrigger>
+              <SelectContent>
+                {playoffMatches.map((match) => {
+                  const getPlayoffLabel = (type?: string) => {
+                    switch (type) {
+                      case "qualifier1": return "Qualifier 1";
+                      case "eliminator": return "Eliminator";
+                      case "qualifier2": return "Qualifier 2";
+                      case "final": return "Final";
+                      default: return "Playoff";
+                    }
+                  };
+                  const teamA = TEAMS.find((t) => t.id === match.teamA);
+                  const teamB = TEAMS.find((t) => t.id === match.teamB);
+                  const status = match.winner || match.isNoResult ? " ✓" : "";
+                  const teamALabel = teamA?.shortName || match.teamA;
+                  const teamBLabel = teamB?.shortName || match.teamB;
+                  
+                  return (
+                    <SelectItem key={match.id} value={match.id}>
+                      {getPlayoffLabel(match.playoffType)}: {teamALabel} vs {teamBLabel}
+                      {status}
+                    </SelectItem>
+                  );
+                })}
+              </SelectContent>
+            </Select>
+            {errors.match && (
+              <p className="text-sm text-destructive">{errors.match}</p>
+            )}
+          </div>
+
+          {editingMatch && editingMatch.isPlayoff && (
+            <>
+              {/* Same form fields as league matches */}
+              <div className="flex gap-6">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="playoff-walkover"
+                    checked={isWalkover}
+                    onCheckedChange={(checked) => {
+                      setIsWalkover(checked as boolean);
+                      if (checked) setIsNoResult(false);
+                    }}
+                  />
+                  <Label htmlFor="playoff-walkover">Walkover</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="playoff-noResult"
+                    checked={isNoResult}
+                    onCheckedChange={(checked) => {
+                      setIsNoResult(checked as boolean);
+                      if (checked) setIsWalkover(false);
+                    }}
+                  />
+                  <Label htmlFor="playoff-noResult">No Result</Label>
+                </div>
+              </div>
+
+              {isWalkover && (
+                <div className="space-y-2">
+                  <Label>Winner</Label>
+                  <Select value={winner} onValueChange={setWinner}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select winner" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {editingMatch.teamA !== "TBD" && (
+                        <SelectItem value={editingMatch.teamA}>
+                          {TEAMS.find((t) => t.id === editingMatch.teamA)?.name || editingMatch.teamA}
+                        </SelectItem>
+                      )}
+                      {editingMatch.teamB !== "TBD" && (
+                        <SelectItem value={editingMatch.teamB}>
+                          {TEAMS.find((t) => t.id === editingMatch.teamB)?.name || editingMatch.teamB}
+                        </SelectItem>
+                      )}
+                    </SelectContent>
+                  </Select>
+                  {errors.winner && (
+                    <p className="text-sm text-destructive">{errors.winner}</p>
+                  )}
+                </div>
+              )}
+
+              {!isWalkover && !isNoResult && (
+                <div className="grid md:grid-cols-2 gap-6">
+                  {/* Team A Score */}
+                  <div className="space-y-4">
+                    <h3 className="font-semibold">
+                      {TEAMS.find((t) => t.id === editingMatch.teamA)?.name || editingMatch.teamA}
+                    </h3>
+                    <div className="space-y-2">
+                      <Label>Runs</Label>
+                      <Input
+                        type="number"
+                        value={teamAScore.runs}
+                        onChange={(e) =>
+                          setTeamAScore({ ...teamAScore, runs: e.target.value })
+                        }
+                        placeholder="0"
+                      />
+                      {errors.teamARuns && (
+                        <p className="text-sm text-destructive">
+                          {errors.teamARuns}
+                        </p>
+                      )}
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Wickets</Label>
+                      <Input
+                        type="number"
+                        max="10"
+                        value={teamAScore.wickets}
+                        onChange={(e) =>
+                          setTeamAScore({
+                            ...teamAScore,
+                            wickets: e.target.value,
+                          })
+                        }
+                        placeholder="0"
+                      />
+                      {errors.teamAWickets && (
+                        <p className="text-sm text-destructive">
+                          {errors.teamAWickets}
+                        </p>
+                      )}
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Overs (e.g., 17.4)</Label>
+                      <Input
+                        type="number"
+                        step="0.1"
+                        value={teamAScore.overs}
+                        onChange={(e) =>
+                          setTeamAScore({ ...teamAScore, overs: e.target.value })
+                        }
+                        placeholder="0.0"
+                      />
+                      {errors.teamAOvers && (
+                        <p className="text-sm text-destructive">
+                          {errors.teamAOvers}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Team B Score */}
+                  <div className="space-y-4">
+                    <h3 className="font-semibold">
+                      {TEAMS.find((t) => t.id === editingMatch.teamB)?.name || editingMatch.teamB}
                     </h3>
                     <div className="space-y-2">
                       <Label>Runs</Label>

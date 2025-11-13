@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { Match, generateRoundRobinSchedule } from "@/lib/tournament";
+import { Match, generateRoundRobinSchedule, generatePlayoffMatches } from "@/lib/tournament";
 import { saveMatches, loadMatches, clearMatches } from "@/lib/storage";
 
 interface TournamentContextType {
@@ -22,7 +22,9 @@ export function TournamentProvider({ children }: { children: React.ReactNode }) 
     if (savedMatches) {
       setMatches(savedMatches);
     } else {
-      const initialMatches = generateRoundRobinSchedule();
+      const roundRobinMatches = generateRoundRobinSchedule();
+      const playoffMatches = generatePlayoffMatches();
+      const initialMatches = [...roundRobinMatches, ...playoffMatches];
       setMatches(initialMatches);
       saveMatches(initialMatches);
     }
@@ -44,7 +46,9 @@ export function TournamentProvider({ children }: { children: React.ReactNode }) 
 
   const resetTournament = () => {
     clearMatches();
-    const initialMatches = generateRoundRobinSchedule();
+    const roundRobinMatches = generateRoundRobinSchedule();
+    const playoffMatches = generatePlayoffMatches();
+    const initialMatches = [...roundRobinMatches, ...playoffMatches];
     setMatches(initialMatches);
     saveMatches(initialMatches);
   };
