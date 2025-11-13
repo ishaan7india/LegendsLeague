@@ -87,12 +87,6 @@ export default function AdminLogin() {
               Sign In
             </Button>
           </form>
-
-          <div className="text-center text-xs text-muted-foreground mt-4 p-3 bg-muted rounded-lg">
-            <p className="font-medium mb-1">Demo Credentials:</p>
-            <p>Username: lladmin</p>
-            <p>Password: lovable.dev</p>
-          </div>
         </CardContent>
       </Card>
     </div>
