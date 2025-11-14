@@ -78,9 +78,8 @@ export function TournamentProvider({ children }: { children: React.ReactNode }) 
     const playoffMatches = generatePlayoffMatches();
     const initialMatches = [...roundRobinMatches, ...playoffMatches];
 
-    // Save to database
+    // Save to database (without id - let database generate UUIDs)
     const dbMatches = initialMatches.map((m) => ({
-      id: m.id,
       match_number: m.matchNumber,
       team_a: m.teamA,
       team_b: m.teamB,
@@ -107,7 +106,8 @@ export function TournamentProvider({ children }: { children: React.ReactNode }) 
         variant: "destructive",
       });
     } else {
-      setMatches(initialMatches);
+      // Reload from database to get the generated UUIDs
+      await loadMatchesFromDB();
     }
   };
 
